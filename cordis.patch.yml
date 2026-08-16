@@ -1,0 +1,7 @@
+# dsh-theme-firefly bundle：向 web profile 注入一个客户端主题行。
+# 客户端模块扫描会读取本包的 dsh.client 声明，把浏览器 bundle 注入 ui-theme 槽位。
+# 通过 `dsh plugin --profile web add dsh-theme-firefly` 安装时，
+# 本 patch 会自动把该行挂进 loader，无需手动改 cordis.patch.yml。
+- insert:
+    - id: ui-theme-firefly
+      name: 'dsh-theme-firefly'

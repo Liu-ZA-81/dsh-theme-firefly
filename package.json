@@ -2,6 +2,7 @@
   "name": "dsh-theme-firefly",
   "version": "0.1.0",
   "description": "崩坏：星穹铁道 · 流萤主题 —— 立绘壁纸背景 + 萤火绿霓虹配色 + 开屏变身动画",
+  "author": "Liu-ZA-81",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -11,6 +12,7 @@
   },
   "files": [
     "lib",
+    "cordis.patch.yml",
     "README.md"
   ],
   "keywords": [
@@ -23,6 +25,9 @@
     "honkai-star-rail"
   ],
   "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
     "client": {
       "platform": "web",
       "inject": [

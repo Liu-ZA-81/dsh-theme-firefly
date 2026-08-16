@@ -108,15 +108,10 @@ dsh-theme-firefly/
 # 1. 构建：读取 lib/client.template.js，把素材内嵌成 lib/client.js
 node build.cjs
 
-# 2. 以 link 方式安装到 web profile（改代码刷新即生效）
+# 2. 以 link 方式安装到 web profile（本插件声明了 dsh.bundle，会自动注册）
 dsh plugin --profile web add "link:<本目录绝对路径>"
 
-# 3. 在 ~/.dsh/profiles/web/cordis.patch.yml 追加：
-#    - insert:
-#        - id: ui-theme-firefly
-#          name: 'dsh-theme-firefly'
-
-# 4. 重启 dsh web 生效
+# 3. 重启 dsh web 生效
 ```
 
 > 💡 默认开箱即用为**静态壁纸**（官方立绘）。如需动态壁纸，自行将已授权/原创的
