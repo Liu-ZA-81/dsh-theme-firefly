@@ -1,0 +1,114 @@
+/**
+ * 构建脚本：把 assets/ 下所有壁纸（图片 + mp4 动态壁纸）与 GIF/ 下的开屏动图
+ * 以 base64 data-URI 内嵌进 lib/client.js（DSH 只服务 client.js 一个文件）。
+ * 用法：node build.cjs
+ * 幂等：用注释标记包裹数据段，重复运行会替换掉上一次注入的内容。
+ */
+const fs = require("fs");
+const path = require("path");
+
+const root = __dirname;
+const templatePath = path.join(root, "lib", "client.template.js");
+const clientPath = path.join(root, "lib", "client.js");
+const assetsDir = path.join(root, "assets");
+
+function b64(file) {
+  return fs.readFileSync(file).toString("base64");
+}
+function mimeOf(ext) {
+  switch (ext.toLowerCase()) {
+    case ".mp4": return "video/mp4";
+    case ".jpg": case ".jpeg": return "image/jpeg";
+    case ".png": return "image/png";
+    case ".webp": return "image/webp";
+    case ".gif": return "image/gif";
+    case ".mp3": return "audio/mpeg";
+    case ".ogg": return "audio/ogg";
+    case ".m4a": return "audio/mp4";
+    case ".wav": return "audio/wav";
+    default: return "application/octet-stream";
+  }
+}
+
+// ── 1) 壁纸清单：视频优先（默认第一个），其余按文件名排序 ──
+const mediaExts = [".mp4", ".jpg", ".jpeg", ".png", ".webp"];
+const files = fs.readdirSync(assetsDir).filter((f) => mediaExts.includes(path.extname(f).toLowerCase()));
+const vids = files.filter((f) => /\.mp4$/i.test(f)).sort();
+const imgs = files.filter((f) => !/\.mp4$/i.test(f)).sort();
+const ordered = [...vids, ...imgs];
+const manifest = ordered.map((f) => {
+  const ext = path.extname(f);
+  const mime = mimeOf(ext);
+  return { id: f, kind: /\.mp4$/i.test(f) ? "video" : "image", mime, data: `data:${mime};base64,${b64(path.join(assetsDir, f))}`, label: f };
+});
+console.log("wallpapers:");
+manifest.forEach((m) => console.log(`  ${m.kind.padEnd(5)} ${m.label}  (b64 ${(m.data.length / 1048576).toFixed(1)} MB)`));
+
+// ── 2) 开屏动图 ──
+const gifDir = path.join(root, "GIF");
+const gifs = fs.readdirSync(gifDir).filter((f) => /\.gif$/i.test(f));
+if (gifs.length === 0) {
+  console.error("ERROR: no .gif found in GIF/ directory");
+  process.exit(1);
+}
+const gifUri = `data:image/gif;base64,${b64(path.join(gifDir, gifs[0]))}`;
+console.log(`boot gif: ${gifs[0]}  (b64 ${(gifUri.length / 1048576).toFixed(1)} MB)`);
+
+// ── 3) 背景音乐清单：优先「使一颗心免于哀伤」，其余按文件名排序 ──
+const musicDir = path.join(root, "music");
+let musicFiles = [];
+if (fs.existsSync(musicDir)) {
+  musicFiles = fs.readdirSync(musicDir).filter((f) => /\.(mp3|ogg|m4a|wav)$/i.test(f));
+}
+musicFiles.sort((a, b) => a.localeCompare(b, "zh"));
+const preferredIdx = musicFiles.findIndex((f) => f.includes("使一颗心免于哀伤"));
+if (preferredIdx > 0) {
+  const [p] = musicFiles.splice(preferredIdx, 1);
+  musicFiles.unshift(p);
+}
+const musicManifest = musicFiles.map((f) => {
+  const ext = path.extname(f);
+  return { id: f, mime: mimeOf(ext), data: `data:${mimeOf(ext)};base64,${b64(path.join(musicDir, f))}`, label: f.replace(/\.[^.]+$/, "") };
+});
+console.log("music:");
+musicManifest.forEach((m) => console.log(`  ${m.label}  (b64 ${(m.data.length / 1048576).toFixed(1)} MB)`));
+
+// ── 3.5) 表情包（隐藏彩蛋）：GIF/表情包/ 下所有 .gif，id 取文件名 ──
+const emoteDir = path.join(gifDir, "表情包");
+const emoteManifest = [];
+if (fs.existsSync(emoteDir)) {
+  emoteManifest.push(...fs.readdirSync(emoteDir).filter((f) => /\.gif$/i.test(f)).sort((a, b) => a.localeCompare(b, "zh")).map((f) => ({
+    id: f.replace(/\.[^.]+$/, ""),
+    mime: "image/gif",
+    data: `data:image/gif;base64,${b64(path.join(emoteDir, f))}`,
+    label: f.replace(/\.[^.]+$/, ""),
+  })));
+}
+console.log("emotes:");
+emoteManifest.forEach((e) => console.log(`  ${e.id}  (b64 ${(e.data.length / 1048576).toFixed(1)} MB)`));
+
+// ── 4) 注入 ──
+let src = fs.readFileSync(templatePath, "utf8");
+const manifestJson = JSON.stringify(manifest);
+src = src.replace(
+  /\/\*__FIREFLY_BG_MANIFEST_START__\*\/[\s\S]*?\/\*__FIREFLY_BG_MANIFEST_END__\*\//,
+  `/*__FIREFLY_BG_MANIFEST_START__*/${manifestJson}/*__FIREFLY_BG_MANIFEST_END__*/`
+);
+src = src.replace(
+  /\/\*__FIREFLY_GIF_START__\*\/[\s\S]*?\/\*__FIREFLY_GIF_END__\*\//,
+  `/*__FIREFLY_GIF_START__*/${JSON.stringify(gifUri)}/*__FIREFLY_GIF_END__*/`
+);
+if (musicManifest.length > 0) {
+  src = src.replace(
+    /\/\*__FIREFLY_MUSIC_START__\*\/[\s\S]*?\/\*__FIREFLY_MUSIC_END__\*\//,
+    `/*__FIREFLY_MUSIC_START__*/${JSON.stringify(musicManifest)}/*__FIREFLY_MUSIC_END__*/`
+  );
+}
+if (emoteManifest.length > 0) {
+  src = src.replace(
+    /\/\*__FIREFLY_EMOTES_START__\*\/[\s\S]*?\/\*__FIREFLY_EMOTES_END__\*\//,
+    `/*__FIREFLY_EMOTES_START__*/${JSON.stringify(emoteManifest)}/*__FIREFLY_EMOTES_END__*/`
+  );
+}
+fs.writeFileSync(clientPath, src);
+console.log(`OK: built lib/client.js = ${(src.length / 1048576).toFixed(1)} MB`);

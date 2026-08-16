@@ -1,0 +1,14 @@
+# ── 构建产物（由 build.cjs 从 lib/client.template.js 生成，含 base64 素材）──
+lib/client.js
+
+# ── 第三方壁纸资源（版权归各自原权利方，不随仓库分发）──
+assets/*.mp4
+assets/firefly4.png
+assets/firefly5.png
+assets/firefly6.png
+assets/firefly7.jpg
+
+# ── 依赖与系统文件 ──
+node_modules/
+.DS_Store
+Thumbs.db
