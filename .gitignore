@@ -1,8 +1,10 @@
 # ── 构建产物（由 build.cjs 从 lib/client.template.js 生成，含 base64 素材）──
 lib/client.js
 
-# ── 第三方壁纸资源（版权归各自原权利方，不随仓库分发）──
+# ── 第三方壁纸资源（版权归各自原权利方）──
+# 保留一个演示视频开箱即用，其余 mp4 不随仓库分发
 assets/*.mp4
+!assets/【哲风壁纸】台灯-城市夜景-夜晚.mp4
 assets/firefly4.png
 assets/firefly5.png
 assets/firefly6.png
