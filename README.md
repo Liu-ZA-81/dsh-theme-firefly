@@ -5,6 +5,19 @@
 
 让夜之城之外，星穹列车的萤火也为你点亮。🪰✨
 
+## 🖼️ 预览与演示
+
+| 功能 | 截图 |
+|---|---|
+| 动态 / 静态壁纸 | ![壁纸](docs/screenshots/01-wallpaper.png) |
+| 开屏变身动画 | ![开屏动画](docs/screenshots/02-boot.png) |
+| 萤火氛围粒子 | ![萤火粒子](docs/screenshots/03-firefly.png) |
+| 背景音乐播放器 | ![背景音乐](docs/screenshots/04-music.png) |
+| 表情包彩蛋 | ![表情包](docs/screenshots/05-emote.png) |
+
+> 🎬 演示视频（B 站）：
+https://www.bilibili.com/video/BV1VLba6WEAr/?vd_source=573abae8b62b8edf27edc7cb8933e1b6
+
 ---
 
 ## ✨ 功能特性
