@@ -153,6 +153,10 @@ dsh plugin --profile web remove dsh-theme-firefly
 # 删除 cordis.patch.yml 里的 ui-theme-firefly 行，重启
 ```
 
+## 📚 更多文档
+
+- [FAQ 常见问题](./FAQ.md)
+
 ---
 
 ## 🛠️ 自定义素材
