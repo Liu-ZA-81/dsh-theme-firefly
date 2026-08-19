@@ -1,8 +1,12 @@
 {
   "name": "dsh-theme-firefly",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "崩坏：星穹铁道 · 流萤主题 —— 立绘壁纸背景 + 萤火绿霓虹配色 + 开屏变身动画",
   "author": "Liu-ZA-81",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Liu-ZA-81/dsh-theme-firefly.git"
+  },
   "type": "module",
   "main": "lib/index.js",
   "exports": {
