@@ -130,20 +130,18 @@ dsh-theme-firefly/
 
 ## 🚀 快速开始
 
-> 仓库不提交 `lib/client.js`（构建产物）。clone 后需先构建，再安装。
+> 仓库已提交「干净版」`lib/client.js`（`--clean` 构建，只含已提交素材），
+> clone 后**开箱即用**，无需再构建。仅当你要改内置素材时才需要重新构建。
 
 ```powershell
-# 1. 构建：读取 lib/client.template.js，把素材内嵌成 lib/client.js
-node build.cjs
-
-# 2. 以 link 方式安装到 web profile（本插件声明了 dsh.bundle，会自动注册）
+# 1. 以 link 方式安装到 web profile（本插件声明了 dsh.bundle，会自动注册）
 dsh plugin --profile web add "link:<本目录绝对路径>"
 
-# 3. 重启 dsh web 生效
+# 2. 重启 dsh web 生效
 ```
 
 > 💡 开箱即用含一张**动态壁纸**（演示视频）与多张静态立绘；想加更多壁纸，
-> 直接点「景」→「＋ 添加壁纸」导入，或把文件放入 `assets/` 后重新 `node build.cjs`。
+> 直接点「景」→「＋ 添加壁纸」导入，或把文件放入 `assets/` 后重新构建（见「自定义素材」）。
 
 > ⚠️ 与其它主题（如赛博朋克主题）互斥：多个主题都会调用 `ctx.theme.setTheme`
 > 并注入 `!important` 令牌样式，**后加载的赢**。建议同时只启用一个主题
@@ -172,7 +170,8 @@ dsh plugin --profile web remove dsh-theme-firefly
 其余素材（开屏动图、音乐）需通过 `build.cjs` 内嵌进 `lib/client.js`：
 
 ```powershell
-node build.cjs          # 在项目目录下运行；幂等，可重复执行
+node build.cjs          # 完整构建：打包 assets/ 里全部素材（含第三方，仅供本地使用）
+node build.cjs --clean  # 干净构建：只打包 build.include.txt 清单里的素材（用于提交仓库）
 ```
 
 - **壁纸**：`assets/` 支持 `.jpg/.jpeg/.png/.webp`（静态）与 `.mp4`（动态）
@@ -181,6 +180,9 @@ node build.cjs          # 在项目目录下运行；幂等，可重复执行
 
 > 💡 体积建议：素材会 base64 内嵌进 JS 包，建议控制大小（mp3 ≤128kbps、图片 ≤500KB、
 > 视频 ≤1080p），避免页面加载变慢。
+>
+> ⚠️ **提交仓库前记得跑 `node build.cjs --clean`**（生成只含官方素材的干净版），
+> 避免把含第三方壁纸的完整版误提交。
 
 ---
 

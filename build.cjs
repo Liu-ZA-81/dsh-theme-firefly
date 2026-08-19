@@ -30,9 +30,30 @@ function mimeOf(ext) {
   }
 }
 
+// ── 0) 干净模式：--clean 时只打包 build.include.txt 里列出的壁纸 ──
+const CLEAN = process.argv.includes("--clean");
+let includeSet = null;
+if (CLEAN) {
+  const incPath = path.join(root, "build.include.txt");
+  if (!fs.existsSync(incPath)) {
+    console.error("ERROR: --clean 需要 build.include.txt 清单文件");
+    process.exit(1);
+  }
+  includeSet = new Set(
+    fs.readFileSync(incPath, "utf8")
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter((l) => l && !l.startsWith("#"))
+  );
+  console.log(`clean mode: 仅打包 build.include.txt 里的 ${includeSet.size} 个壁纸`);
+}
+
 // ── 1) 壁纸清单：视频优先（默认第一个），其余按文件名排序 ──
 const mediaExts = [".mp4", ".jpg", ".jpeg", ".png", ".webp"];
-const files = fs.readdirSync(assetsDir).filter((f) => mediaExts.includes(path.extname(f).toLowerCase()));
+let files = fs.readdirSync(assetsDir).filter((f) => mediaExts.includes(path.extname(f).toLowerCase()));
+if (CLEAN) {
+  files = files.filter((f) => includeSet.has("assets/" + f));
+}
 const vids = files.filter((f) => /\.mp4$/i.test(f)).sort();
 const imgs = files.filter((f) => !/\.mp4$/i.test(f)).sort();
 const ordered = [...vids, ...imgs];

@@ -1,5 +1,6 @@
-# ── 构建产物（由 build.cjs 从 lib/client.template.js 生成，含 base64 素材）──
-lib/client.js
+# ── 关于 lib/client.js ──
+# 提交「干净版」：node build.cjs --clean 生成（只含下方已提交素材）。
+# 本地跑完整构建 node build.cjs（含第三方壁纸）会变大，请勿误提交完整版。
 
 # ── 第三方壁纸资源（版权归各自原权利方）──
 # 保留一个演示视频开箱即用，其余 mp4 不随仓库分发
