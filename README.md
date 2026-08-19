@@ -130,15 +130,27 @@ dsh-theme-firefly/
 
 ## 🚀 快速开始
 
-> 仓库已提交「干净版」`lib/client.js`（`--clean` 构建，只含已提交素材），
-> clone 后**开箱即用**，无需再构建。仅当你要改内置素材时才需要重新构建。
+### 方式一：npm 安装（推荐，一条命令开箱即用）
 
 ```powershell
-# 1. 以 link 方式安装到 web profile（本插件声明了 dsh.bundle，会自动注册）
+dsh plugin --profile web add dsh-theme-firefly
+```
+
+装完重启 `dsh web` 即生效。npm 包已内置「干净版」`lib/client.js`，**免 git、免构建**。
+
+### 方式二：GitHub 源码安装（开发者/想改素材时用）
+
+```powershell
+# 1. clone 本仓库（仓库已提交干净版 client.js，clone 后开箱即用）
+git clone https://github.com/Liu-ZA-81/dsh-theme-firefly.git
+
+# 2. 以 link 方式安装到 web profile（本插件声明了 dsh.bundle，会自动注册）
 dsh plugin --profile web add "link:<本目录绝对路径>"
 
-# 2. 重启 dsh web 生效
+# 3. 重启 dsh web 生效
 ```
+
+> 想改内置素材时，改完 `assets/` 等目录后运行 `node build.cjs --clean` 重新构建干净版。
 
 > 💡 开箱即用含一张**动态壁纸**（演示视频）与多张静态立绘；想加更多壁纸，
 > 直接点「景」→「＋ 添加壁纸」导入，或把文件放入 `assets/` 后重新构建（见「自定义素材」）。

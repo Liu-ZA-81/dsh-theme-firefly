@@ -15,6 +15,9 @@
     "cordis.patch.yml",
     "README.md"
   ],
+  "scripts": {
+    "prepack": "node build.cjs --clean"
+  },
   "keywords": [
     "deepseek-harness",
     "dsh",
