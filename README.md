@@ -28,7 +28,7 @@
 ![表情包](docs/screenshots/05-emote.jpg)
 
 > 🎬 演示视频（B 站）：
-https://www.bilibili.com/video/BV1VLba6WEAr/?vd_source=573abae8b62b8edf27edc7cb8933e1b6
+https://www.bilibili.com/video/BV1nF8B6QEEj/?spm_id_from=333.1387.homepage.video_card.click&vd_source=573abae8b62b8edf27edc7cb8933e1b6
 
 ---
 
