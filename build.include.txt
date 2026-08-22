@@ -1,6 +1,7 @@
 # 干净构建（--clean）时打包进仓库的壁纸清单（一行一个，相对路径）
 # 其它素材（GIF/表情包/music）默认全部打包，无需在此列出
 # 第三方壁纸（firefly4-7、光影视频等）不在此清单 → 不进仓库
+assets/Default_wallpaper.png
 assets/firefly-bg.jpg
 assets/firefly2.png
 assets/firefly3.png
