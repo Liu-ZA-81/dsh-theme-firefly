@@ -87,12 +87,41 @@ if (preferredIdx > 0) {
   const [p] = musicFiles.splice(preferredIdx, 1);
   musicFiles.unshift(p);
 }
+// 排除清单（build.music-exclude.txt，一行一个文件名）——用于「先不把新添加音乐整合进 client.js」，便于测试手动添加
+const musicExcludePath = path.join(root, "build.music-exclude.txt");
+if (fs.existsSync(musicExcludePath)) {
+  const excludeSet = new Set(
+    fs.readFileSync(musicExcludePath, "utf8")
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter((l) => l && !l.startsWith("#"))
+  );
+  const before = musicFiles.length;
+  musicFiles = musicFiles.filter((f) => !excludeSet.has(f));
+  if (musicFiles.length < before) console.log(`music: 按 build.music-exclude.txt 跳过 ${before - musicFiles.length} 首`);
+}
 const musicManifest = musicFiles.map((f) => {
   const ext = path.extname(f);
   return { id: f, mime: mimeOf(ext), data: `data:${mimeOf(ext)};base64,${b64(path.join(musicDir, f))}`, label: f.replace(/\.[^.]+$/, "") };
 });
 console.log("music:");
 musicManifest.forEach((m) => console.log(`  ${m.label}  (b64 ${(m.data.length / 1048576).toFixed(1)} MB)`));
+
+// ── 3.4) 内置歌曲默认封面：music/figure/ 下第一张图片（开箱即用的虚拟歌手「知更鸟」图）──
+const figureDir = path.join(musicDir, "figure");
+let defaultCoverUri = null;
+if (fs.existsSync(figureDir)) {
+  const figs = fs.readdirSync(figureDir).filter((f) => /\.(png|jpg|jpeg|webp|gif)$/i.test(f)).sort();
+  if (figs.length > 0) {
+    const fc = figs[0];
+    defaultCoverUri = `data:${mimeOf(path.extname(fc))};base64,${b64(path.join(figureDir, fc))}`;
+    console.log(`default cover: ${fc}  (b64 ${(defaultCoverUri.length / 1048576).toFixed(2)} MB)`);
+  } else {
+    console.log("default cover: music/figure/ 为空，回退 ♪ 占位");
+  }
+} else {
+  console.log("default cover: 无 music/figure/，回退 ♪ 占位");
+}
 
 // ── 3.5) 表情包（隐藏彩蛋）：GIF/表情包/ 下所有 .gif，id 取文件名 ──
 const emoteDir = path.join(gifDir, "表情包");
@@ -131,5 +160,9 @@ if (emoteManifest.length > 0) {
     `/*__FIREFLY_EMOTES_START__*/${JSON.stringify(emoteManifest)}/*__FIREFLY_EMOTES_END__*/`
   );
 }
+src = src.replace(
+  /\/\*__FIREFLY_DEFAULT_COVER_START__\*\/[\s\S]*?\/\*__FIREFLY_DEFAULT_COVER_END__\*\//,
+  `/*__FIREFLY_DEFAULT_COVER_START__*/${JSON.stringify(defaultCoverUri)}/*__FIREFLY_DEFAULT_COVER_END__*/`
+);
 fs.writeFileSync(clientPath, src);
 console.log(`OK: built lib/client.js = ${(src.length / 1048576).toFixed(1)} MB`);
