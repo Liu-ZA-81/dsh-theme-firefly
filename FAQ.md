@@ -19,7 +19,7 @@
 
 **壁纸**：点「景」→「＋ 添加壁纸」直接导入（立即生效）；或放入 `assets/` 后构建。
 
-其余素材通过 `build.cjs` 内嵌：
+其余素材通过 `build.cjs` 收录进 URL 清单（素材本体外置，由服务端 `/theme-firefly-assets/` 提供）：
 
 | 素材 | 位置 | 说明 |
 |---|---|---|
@@ -28,7 +28,7 @@
 | 表情包 | `GIF/表情包/` | 文件名即触发情绪 |
 | 背景音乐 | `music/` | 支持 mp3/ogg/m4a/wav |
 | 歌曲默认封面 | `music/figure/` | 取第一张图片（如知更鸟图） |
-| 音乐排除清单 | `build.music-exclude.txt` | 一行一个文件名，构建时不内嵌 |
+| 音乐排除清单 | `build.music-exclude.txt` | 一行一个文件名，构建时不收录 |
 
 换完后重新运行 `node build.cjs`，再刷新页面。
 
@@ -38,10 +38,11 @@
 的图片，仓库默认随带的是 `Default_wallpaper.png`。之后你手动切换过壁纸，就会以
 你的选择为准（记录在浏览器本地）。想回到默认图，清一下该站点的本地存储即可。
 
-### Q：为什么 `lib/client.js` 那么大（几十 MB）？
+### Q：为什么 `lib/client.js` 只有 90KB 左右？
 
-DSH 只服务插件的 `client.js` 一个文件，所以图片/视频/音频/GIF 都以 base64
-内嵌进去。控制素材体积（视频 ≤1080p、音乐 ≤128kbps）可显著减小。
+素材不再 base64 内嵌，由服务端半注册的 `/theme-firefly-assets/` 静态路由按需流式
+提供（壁纸/音乐/动图原文件直接从插件目录读）。这样 `client.js` 聚合时不会把
+bundle 撑到几十 MB，避免浏览器加载失败。
 
 ## 功能与操作
 
@@ -117,8 +118,8 @@ dsh plugin --profile web remove dsh-theme-firefly
 
 ### Q：能否发布到 npm？
 
-可以，但本主题体积较大（含内嵌素材），git 安装体验反而更稳定。如需 npm 分发，
-建议先精简素材。
+可以。素材已外置（`client.js` 仅 90KB，素材本体由静态路由提供），npm 包与 git
+安装体验一致。
 
 ### Q：有 B 站演示视频吗？
 

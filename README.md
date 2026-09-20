@@ -126,16 +126,16 @@ https://www.bilibili.com/video/BV1nF8B6QEEj/?spm_id_from=333.1387.homepage.video
 ```
 dsh-theme-firefly/
 ├── package.json            # dsh.client 声明（web 插件，注入 ui-theme 槽位）
-├── lib/index.js            # 服务端占位
+├── lib/index.js            # 服务端：注册 /theme-firefly-assets 静态资产路由
 ├── lib/client.template.js  # 浏览器端主题源码（含占位符，随仓库提交）
-├── lib/client.js           # 构建产物（build.cjs --clean 生成，含 base64 素材，随仓库提交干净版）
+├── lib/client.js           # 构建产物（build.cjs --clean 生成，只含 URL 清单，随仓库提交干净版）
 ├── assets/                 # 壁纸：图片(jpg/png/webp) + mp4 动态壁纸
 ├── GIF/                    # 开屏动图（取第一个 .gif）
 │   └── 表情包/             # 表情包 GIF（文件名即触发情绪：开心/得意/变身/没错/期待/疑惑）
 ├── music/                  # 背景音乐（mp3/ogg/m4a/wav），默认第一首「使一颗心免于哀伤」
 │   └── figure/             # 内置歌曲默认封面（取第一张图片，如知更鸟图）
-├── build.cjs               # 构建：读取 client.template.js，把素材内嵌成 lib/client.js
-├── build.music-exclude.txt # 音乐排除清单（clean 构建时不内嵌其中列出的曲目）
+├── build.cjs               # 构建：读取 client.template.js，把素材清单（URL）注入 lib/client.js
+├── build.music-exclude.txt # 音乐排除清单（clean 构建时不收录其中列出的曲目）
 ├── LICENSE                 # MIT（仅代码）
 ├── .gitignore              # 忽略构建产物与第三方壁纸
 └── README.md
@@ -151,7 +151,8 @@ dsh-theme-firefly/
 dsh plugin --profile web add dsh-theme-firefly
 ```
 
-装完重启 `dsh web` 即生效。npm 包已内置「干净版」`lib/client.js`，**免 git、免构建**。
+装完重启 `dsh web` 即生效。npm 包已内置「干净版」`lib/client.js`（只含素材 URL 清单，
+素材本体由服务端 `/theme-firefly-assets/` 静态路由提供），**免 git、免构建、包体积小**。
 
 ### 方式二：GitHub 源码安装（开发者/想改素材时用）
 
@@ -165,7 +166,8 @@ dsh plugin --profile web add "link:<本目录绝对路径>"
 # 3. 重启 dsh web 生效
 ```
 
-> 想改内置素材时，改完 `assets/` 等目录后运行 `node build.cjs --clean` 重新构建干净版。
+> 想改内置素材时，改完 `assets/` 等目录后运行 `node build.cjs --clean` 重新构建干净版
+> （构建只更新 `lib/client.js` 里的 URL 清单，素材文件本身无需内嵌）。
 
 > 💡 开箱即用含一张**动态壁纸**（演示视频）与多张静态立绘；想加更多壁纸，
 > 直接点「景」→「＋ 添加壁纸」导入，或把文件放入 `assets/` 后重新构建（见「自定义素材」）。
@@ -192,13 +194,13 @@ dsh plugin --profile web remove dsh-theme-firefly
 **壁纸**有两种添加方式：
 
 1. **运行时添加（推荐）**：点「景」→「＋ 添加壁纸」，从本机一次多选图片/视频（Ctrl/框选），立即生效并持久化
-2. **打包内嵌**：把文件放入 `assets/` 后运行 `node build.cjs`（适合预置默认壁纸）
+2. **打包收录**：把文件放入 `assets/` 后运行 `node build.cjs`（适合预置默认壁纸，素材外置由静态路由提供）
 
-其余素材（开屏动图、音乐）需通过 `build.cjs` 内嵌进 `lib/client.js`：
+其余素材（开屏动图、音乐）需通过 `build.cjs` 收录进 `lib/client.js` 的 URL 清单：
 
 ```powershell
-node build.cjs          # 完整构建：打包 assets/ 里全部素材（含第三方，仅供本地使用）
-node build.cjs --clean  # 干净构建：只打包 build.include.txt 清单里的素材（用于提交仓库）
+node build.cjs          # 完整构建：收录 assets/ 里全部素材（含第三方，仅供本地使用）
+node build.cjs --clean  # 干净构建：只收录 build.include.txt 清单里的素材（用于提交仓库）
 ```
 
 - **壁纸**：`assets/` 支持 `.jpg/.jpeg/.png/.webp`（静态）与 `.mp4`（动态）
@@ -208,8 +210,9 @@ node build.cjs --clean  # 干净构建：只打包 build.include.txt 清单里�
   `music/figure/` 里第一张图片会作为内置歌曲默认封面；`build.music-exclude.txt` 里列出的
   文件名会在构建时被排除（可留待运行时「＋ 添加歌曲」导入）
 
-> 💡 体积建议：素材会 base64 内嵌进 JS 包，建议控制大小（mp3 ≤128kbps、图片 ≤500KB、
-> 视频 ≤1080p），避免页面加载变慢。
+> 💡 体积说明：素材**不内嵌**进 JS 包，由服务端 `/theme-firefly-assets/` 静态路由按需
+> 流式提供（`lib/client.js` 仅 90KB 左右，避免聚合 bundle 过大导致浏览器加载失败）。
+> 建议素材控制合理体积（mp3 ≤128kbps、图片 ≤500KB、视频 ≤1080p），加快首屏加载。
 >
 > ⚠️ **提交仓库前记得跑 `node build.cjs --clean`**（生成只含官方素材的干净版），
 > 避免把含第三方壁纸的完整版误提交。
@@ -225,7 +228,8 @@ node build.cjs --clean  # 干净构建：只打包 build.include.txt 清单里�
 3. **身份层**：注入 `<style>` 实现壁纸背景、粒子动画、开屏动画等；音频全部
    Web Audio 实时合成，无外部资源依赖
 4. **壁纸/音乐渲染**：动态壁纸用 `<video muted loop autoplay>`、静态用 CSS 背景层、
-   音乐用 `<audio>`；均以 base64 data-URI 内嵌
+   音乐用 `<audio>`；素材以 `/theme-firefly-assets/` URL 形式外置（服务端半注册
+   webServer 前缀路由按需流式提供，不内联 base64）
 
 ---
 
