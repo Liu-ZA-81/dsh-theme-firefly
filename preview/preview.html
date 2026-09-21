@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>流萤主题 · 悬浮框独立预览（不走 DSH）</title>
+<style>
+  html, body { height: 100%; margin: 0; background: #0a0f1c; color: #e8f6ff; font-family: system-ui, sans-serif; }
+  #hint {
+    position: fixed; left: 12px; top: 12px; z-index: 9999;
+    padding: 8px 14px; font-size: 12px; opacity: .75;
+    background: rgba(8, 14, 26, .85); border: 1px solid rgba(125, 255, 158, .35);
+    border-radius: 8px; pointer-events: none;
+  }
+  #hint code { color: #7dff9e; }
+</style>
+</head>
+<body>
+<div id="hint">⚠ 独立预览态：壁纸/音乐资源（<code>/theme-firefly-assets/…</code>）需本地静态服务器才可见，悬浮框 UI 本身完整可点可拖</div>
+
+<script>
+// ── 垫片 1/3：__ModuleLoader__（DSH 客户端模块注册器）──
+window.__ModuleLoader__ = {
+  load(def) {
+    window.__FF_MOD__ = def; // 存模块定义，预览脚本随后手动 factory()
+  },
+};
+</script>
+
+<script>
+// ── 垫片 0：跳过主题开屏变身动画 ──
+// 主题 playTransformIntro() 在 prefers-reduced-motion: reduce 时直接 return（不渲染 .ff-boot 全屏遮罩）。
+// 独立预览要一进页面就能看到悬浮框，不能等 10 秒动画——垫片让 matchMedia 对该查询返回 matches=true。
+// 注意：必须在 client.js 之前定义（apply 执行时读取）。
+(() => {
+  const origMatchMedia = window.matchMedia ? window.matchMedia.bind(window) : null;
+  window.matchMedia = (query) => {
+    if (typeof query === 'string' && query.includes('prefers-reduced-motion')) {
+      return { matches: true, media: query, addEventListener() {}, removeEventListener() {} };
+    }
+    return origMatchMedia ? origMatchMedia(query) : { matches: false, media: String(query), addEventListener() {}, removeEventListener() {} };
+  };
+})();
+</script>
+
+<script src="../lib/client.js"></script>
+
+<script>
+(function boot() {
+  const def = window.__FF_MOD__;
+  if (!def) { document.body.insertAdjacentHTML('beforeend', '<pre style="color:#f66">client.js 未定义 __ModuleLoader__ 注册</pre>'); return; }
+
+  // 手动执行 factory 拿 exports（client.js 无外部 require，直出对象）
+  let exported;
+  try {
+    exported = def.factory(() => { throw new Error('预览态不支持 require'); });
+  } catch (e) {
+    document.body.insertAdjacentHTML('beforeend', '<pre style="color:#f66">factory 执行失败: ' + e.message + '</pre>');
+    throw e;
+  }
+
+  // ── 垫片 2/3：ctx（主题只用到 effect + theme）──
+  const fakeCtx = {
+    effect(cb) {
+      const dispose = (typeof cb === 'function') ? cb() : undefined;
+      return typeof dispose === 'function' ? dispose : () => {};
+    },
+    theme: {
+      register(cfg) {
+        console.log('[preview] theme.register:', cfg && cfg.id);
+        // 把设计令牌铺到 :root，让 CSS 变量生效
+        if (cfg && cfg.tokens) {
+          for (const [k, v] of Object.entries(cfg.tokens)) {
+            document.documentElement.style.setProperty(k, v);
+          }
+        }
+      },
+      setTheme(id) { console.log('[preview] setTheme:', id); },
+    },
+  };
+
+  // ── 垫片 3/3：fetch（独立静态服务器未起时，list 兜底为空清单；其余请求放行真服务器）──
+  const origFetch = window.fetch;
+  window.fetch = (url, opts) => {
+    const s = String(url);
+    // 仅当请求失败（服务器没起）时兜底——用 catch 包裹，成功则透传
+    if (s.includes('/theme-firefly-assets/')) {
+      return origFetch(url, opts).catch(() => {
+        if (s.includes('wallpapers/list')) {
+          return new Response(JSON.stringify({ ok: true, items: [] }), { status: 200, headers: { 'content-type': 'application/json' } });
+        }
+        return new Response(JSON.stringify({ ok: false, error: 'preview server offline' }), { status: 502, headers: { 'content-type': 'application/json' } });
+      });
+    }
+    return origFetch(url, opts);
+  };
+
+  // 启动主题
+  console.log('[preview] applying...');
+  exported.apply(fakeCtx);
+  console.log('[preview] apply done — 悬浮框应已挂载到 .ff-dock');
+})();
+</script>
+</body>
+</html>
